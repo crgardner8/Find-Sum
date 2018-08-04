@@ -150,6 +150,8 @@
     self.numberList = [NSMutableArray new];
     [self.listNumberTableView reloadData];
     
+    self.resultString = @"(-1,-1)";
+    
 }
 
 - (IBAction)clearAllButtonPressed:(UIBarButtonItem *)sender {
@@ -180,7 +182,22 @@
         NSInteger difference = [target integerValue] - [num integerValue];
         
         if ([numList containsObject:@(difference)]) {
-            self.resultString = [NSString stringWithFormat:@"(%li, %li)", [numberList indexOfObject:num], [numberList indexOfObject:@(difference)]];
+            NSInteger differenceIndex = -1;
+            if ([num integerValue] == difference) {
+                for( NSInteger i = 0; i < numberList.count; i++) {
+                    if ([numberList[i] integerValue] == difference) {
+                        if (i == index) {
+                            continue;
+                        } else {
+                            differenceIndex = i;
+                        }
+                        
+                    }
+                }
+            } else {
+                differenceIndex = [numberList indexOfObject:@(difference)];
+            }
+            self.resultString = [NSString stringWithFormat:@"(%li, %li)", index, differenceIndex];
             return YES;
         }
     }
