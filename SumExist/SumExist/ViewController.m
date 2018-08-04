@@ -19,7 +19,10 @@
 @property (weak, nonatomic) IBOutlet UITextField *targetNumberTextField;
 
 @property (weak, nonatomic) IBOutlet UILabel *listNumberLabel;
+
 @property (weak, nonatomic) IBOutlet UITextField *listNumberTextField;
+
+@property (weak, nonatomic) IBOutlet UIButton *clearListButton;
 
 @property(strong, nonatomic) NSNumber *target;
 
@@ -36,8 +39,19 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+    
     self.numberList = [NSMutableArray new];
     self.resultString = @"(-1,-1)";
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -61,11 +75,34 @@
         return YES;
     } else if (textField.tag == 1) {
         [self.numberList addObject:@([textField.text integerValue])];
+        self.clearListButton.enabled = YES;
         textField.text = @"";
         [self.listNumberTableView reloadData];
     }
     
     return YES;
+}
+
+#pragma mark - Keyboard Movements
+
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+    CGSize keyboardSize = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        CGRect viewFrame = self.view.frame;
+        viewFrame.origin.y = -keyboardSize.height;
+        self.view.frame = viewFrame;
+    }];
+}
+
+-(void)keyboardWillHide:(NSNotification *)notification
+{
+    [UIView animateWithDuration:0.3 animations:^{
+        CGRect viewFrame = self.view.frame;
+        viewFrame.origin.y = 0.0f;
+        self.view.frame = viewFrame;
+    }];
 }
 
 #pragma mark - Tableview Methods
@@ -96,7 +133,7 @@
     return listCell;
 }
 
-#pragma mark - Navigation Bar Methods
+#pragma mark - Button Methods
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     
@@ -107,6 +144,14 @@
     resultVC.result = self.resultString;
 }
 
+- (IBAction)clearListButtonPressed:(UIButton *)sender {
+    
+    self.listNumberTextField.text = @"";
+    self.numberList = [NSMutableArray new];
+    [self.listNumberTableView reloadData];
+    
+}
+
 - (IBAction)clearAllButtonPressed:(UIBarButtonItem *)sender {
     
     self.doneButton.enabled = NO;
@@ -114,13 +159,13 @@
     self.targetNumberTextField.text = @"";
     self.target = [NSNumber new];
     
+    self.clearListButton.enabled = NO;
     self.listNumberTextField.text = @"";
     self.numberList = [NSMutableArray new];
     [self.listNumberTableView reloadData];
     
     self.resultString = @"(-1,-1)";
 }
-
 
 #pragma mark - Private Method
 
